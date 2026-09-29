@@ -10,15 +10,18 @@
     domain: $('domain'), tone: $('tone'), rlang: $('rlang'), format: $('format'), detail: $('detail'),
     clarify: $('clarify'), thinking: $('thinking'),
     output: $('output'), copy: $('copyBtn'), stats: $('stats'), detected: $('detected'),
-    modeHelp: $('modeHelp'), examples: $('examples'), toast: $('toast')
+    modeHelp: $('modeHelp'), metaTab: $('metaTab'), examples: $('examples'), toast: $('toast')
   };
 
   const MODE_HELP = {
-    prompt: 'Şablonlarla dərhal qurulmuş prompt. Kopyalayın və Claude-a yapışdırın — lazım olsa, əvvəlcə burada düzəldin.',
-    meta: 'Bu mətni Claude-a verin: o, lazım olsa suallar verəcək və ideyanız üçün xüsusi prompt yazacaq.'
+    prompt: to => `Şablonlarla dərhal qurulmuş prompt. Kopyalayın və ${to} yapışdırın — lazım olsa, əvvəlcə burada düzəldin.`,
+    meta: to => `Bu mətni ${to} verin: o, lazım olsa suallar verəcək və ideyanız üçün xüsusi prompt yazacaq.`
   };
+  // Azərbaycan dilində yönlük hal: "Claude-a", "ChatGPT-yə"
+  const TO = { claude: 'Claude-a', gpt: 'ChatGPT-yə', gemini: 'Gemini-yə' };
 
   let plang = 'en';
+  let model = 'claude';
   let mode = 'prompt';
 
   /* ---------- Seçimləri doldur ---------- */
@@ -46,7 +49,7 @@
   const CHECKS = ['clarify', 'thinking'];
 
   function saveSettings() {
-    const s = { plang, mode };
+    const s = { plang, mode, model };
     SELECTS.forEach(f => (s[f] = el[f].value));
     CHECKS.forEach(f => (s[f] = el[f].checked));
     try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch { /* ignore */ }
@@ -59,15 +62,18 @@
     CHECKS.forEach(f => (el[f].checked = !!s[f]));
     if (s.plang === 'az' || s.plang === 'en') plang = s.plang;
     if (s.mode === 'meta' || s.mode === 'prompt') mode = s.mode;
+    if (T.MODELS[s.model]) model = s.model;
   }
 
   /* ---------- Render ---------- */
   const escapeHtml = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
   function syncControls() {
-    document.querySelectorAll('.seg-btn').forEach(b => b.classList.toggle('active', b.dataset.plang === plang));
+    document.querySelectorAll('[data-plang]').forEach(b => b.classList.toggle('active', b.dataset.plang === plang));
+    document.querySelectorAll('[data-model]').forEach(b => b.classList.toggle('active', b.dataset.model === model));
+    el.metaTab.textContent = `${T.MODELS[model].label} özü yazsın`;
     document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
-    el.modeHelp.textContent = MODE_HELP[mode];
+    el.modeHelp.textContent = MODE_HELP[mode](TO[model]);
   }
 
   function updateStats() {
@@ -87,7 +93,7 @@
       return;
     }
     const opts = {
-      idea, plang,
+      idea, plang, model,
       domain: el.domain.value, tone: el.tone.value, rlang: el.rlang.value,
       format: el.format.value, detail: el.detail.value,
       audience: el.audience.value, goal: el.goal.value, length: el.length.value,
@@ -135,15 +141,24 @@
     if (!text) { toast('Əvvəlcə ideyanızı yazın', true); el.idea.focus(); return; }
     try {
       await copyText(text);
-      toast(mode === 'meta' ? '✓ Kopyalandı — Claude-a yapışdırın, o, promptu yazacaq' : '✓ Prompt kopyalandı — Claude-a yapışdırın');
+      toast(mode === 'meta' ? `✓ Kopyalandı — ${TO[model]} yapışdırın, o, promptu yazacaq` : `✓ Prompt kopyalandı — ${TO[model]} yapışdırın`);
     } catch { toast('Kopyalamaq alınmadı', true); }
   }
 
   /* ---------- Hadisələr ---------- */
   el.copy.addEventListener('click', copyOutput);
 
-  document.querySelectorAll('.seg-btn').forEach(b => b.addEventListener('click', () => {
+  $('generateBtn').addEventListener('click', () => {
+    if (!el.idea.value.trim()) { toast('Əvvəlcə ideyanızı yazın', true); el.idea.focus(); return; }
+    render();
+    $('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  document.querySelectorAll('[data-plang]').forEach(b => b.addEventListener('click', () => {
     plang = b.dataset.plang; saveSettings(); render();
+  }));
+  document.querySelectorAll('[data-model]').forEach(b => b.addEventListener('click', () => {
+    model = b.dataset.model; saveSettings(); render();
   }));
   document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => {
     mode = b.dataset.mode; saveSettings(); render();

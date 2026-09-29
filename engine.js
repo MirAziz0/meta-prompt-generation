@@ -2,7 +2,7 @@
  * Prompt mühərriki: istifadəçinin ideyasını analiz edir (sahə, niyyət,
  * texnologiya, platforma, dil) və iki növ nəticə qurur:
  *   build()     — şablonlarla hazırlanmış, strukturlaşdırılmış prompt
- *   buildMeta() — Claude-dan promptu özünün yazmasını xahiş edən meta-prompt
+ *   buildMeta() — modeldən promptu özünün yazmasını xahiş edən meta-prompt
  * DOM-dan asılı deyil — həm brauzerdə, həm Node-da (testlər) işləyir.
  */
 (function (root) {
@@ -65,6 +65,7 @@
 
   const fill = (str, vars) => str.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? '');
   const block = (tag, body) => `<${tag}>\n${body}\n</${tag}>`;
+  const getModel = key => T.MODELS[key] || T.MODELS.claude;
 
   // Hər iki rejim üçün ortaq analiz
   function analyze(opts) {
@@ -82,12 +83,15 @@
   }
 
   /*
-   * opts: { idea, plang, domain, tone, rlang, format, detail,
+   * opts: { idea, plang, model, domain, tone, rlang, format, detail,
    *         audience, goal, length, clarify, thinking }
    */
   function build(opts) {
     const L = opts.plang;
     const U = T.UI[L];
+    const M = getModel(opts.model);
+    const xml = M.style === 'xml';
+    const section = (key, body) => xml ? block(key, body) : `## ${U.sec[key]}\n${body}`;
     const m = analyze(opts);
     const D = T.DOMAINS[m.domainKey];
     const vars = { tech: m.tech.length ? m.tech.join(', ') : U.defaultTech };
@@ -99,7 +103,7 @@
     if (audience) context.push(U.audience(audience));
     if (goal) context.push(U.goal(goal));
 
-    const task = [U.taskIntro, block('request', m.idea)];
+    const task = [U.taskIntro, xml ? block('request', m.idea) : `"""\n${m.idea}\n"""`];
     if (m.intentKey) task.push(T.INTENTS[m.intentKey][L]);
 
     const constraints = [];
@@ -113,16 +117,19 @@
     D.constraints[L].forEach(c => constraints.push(fill(c, vars)));
     constraints.push(U.honesty);
 
+    const taskPart = section('task', task.join('\n\n'));
     const parts = [
-      block('role', fill(D.role[L], vars)),
-      block('context', context.join('\n')),
-      block('task', task.join('\n\n')),
-      block('instructions', U.stepsIntro + '\n' + D.steps[L].map((s, i) => `${i + 1}. ${fill(s, vars)}`).join('\n')),
-      block('constraints', constraints.map(c => `- ${c}`).join('\n')),
-      block('output_format', T.FORMATS[m.formatKey][L])
+      section('role', fill(D.role[L], vars)),
+      section('context', context.join('\n')),
+      taskPart,
+      section('instructions', U.stepsIntro + '\n' + D.steps[L].map((s, i) => `${i + 1}. ${fill(s, vars)}`).join('\n')),
+      section('constraints', constraints.map(c => `- ${c}`).join('\n')),
+      section('output_format', T.FORMATS[m.formatKey][L])
     ];
-    if (opts.clarify) parts.push(block('clarification', U.clarify));
-    if (opts.thinking) parts.push(U.thinking);
+    if (opts.clarify) parts.push(section('clarification', U.clarify));
+    // Gemini: əsas tapşırıq kontekst və qaydalardan sonra, sonda gəlir
+    if (M.taskLast) parts.push(parts.splice(parts.indexOf(taskPart), 1)[0]);
+    if (opts.thinking) parts.push(xml ? U.thinking : U.thinkingPlain);
 
     return { text: parts.join('\n\n'), meta: m };
   }
@@ -130,6 +137,7 @@
   function buildMeta(opts) {
     const L = opts.plang;
     const M = T.META[L];
+    const model = getModel(opts.model);
     const m = analyze(opts);
     const known = [];
     const add = (label, v) => { if (v && String(v).trim()) known.push(`- ${label}: ${String(v).trim()}`); };
@@ -144,9 +152,13 @@
     const rl = T.RESPONSE_LANGS[m.rlangKey];
     if (rl && rl.en) add(M.labels.lang, rl.en);
 
-    const parts = [M.intro, block('idea', m.idea)];
+    const vars = {
+      model: model.label,
+      structure: M.structure[model.taskLast ? 'taskLast' : model.style]
+    };
+    const parts = [fill(M.intro, vars), block('idea', m.idea)];
     if (known.length) parts.push(M.known + '\n' + known.join('\n'));
-    parts.push(M.process.join('\n'));
+    parts.push(fill(M.process.join('\n'), vars));
     return { text: parts.join('\n\n'), meta: m };
   }
 

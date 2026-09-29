@@ -67,3 +67,24 @@ test('meta-prompt', () => {
   assert.ok(text.includes('Audience: gənclər'));
   assert.ok(text.includes('Azerbaijani'));
 });
+
+test('modellər: Claude XML, ChatGPT Markdown, Gemini tapşırıq sonda', () => {
+  const idea = 'Python skript yaz';
+  const claude = E.build({ ...base, idea, model: 'claude' }).text;
+  const gpt = E.build({ ...base, idea, model: 'gpt', thinking: true }).text;
+  const gemini = E.build({ ...base, idea, model: 'gemini' }).text;
+
+  assert.ok(claude.includes('<role>') && !claude.includes('## Role'));
+  assert.ok(gpt.includes('## Role') && !gpt.includes('<role>') && !gpt.includes('<thinking>'));
+  assert.ok(gemini.includes('## Role'));
+  assert.ok(gemini.indexOf('## Task') > gemini.indexOf('## Output Format'), 'Gemini-də tapşırıq sonda olmalıdır');
+  assert.ok(gpt.indexOf('## Task') < gpt.indexOf('## Constraints'));
+});
+
+test('meta-prompt seçilmiş modelə uyğunlaşır', () => {
+  const gpt = E.buildMeta({ ...base, idea: 'Kafe reklamı', model: 'gpt' }).text;
+  assert.ok(gpt.includes('prompts for ChatGPT') && gpt.includes('Markdown headings'));
+  const az = E.buildMeta({ ...base, plang: 'az', idea: 'Kafe reklamı', model: 'gemini' }).text;
+  assert.ok(az.includes('Gemini üçün') && az.includes('sonda'));
+  assert.ok(!/\{\w+\}/.test(gpt + az));
+});

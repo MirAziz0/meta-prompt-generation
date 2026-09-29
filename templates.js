@@ -1,9 +1,16 @@
 /*
  * Şablon bazası: sahələr (domain), niyyətlər (intent), ton, format və s.
- * Hər mətn iki dildə saxlanılır: en (Claude üçün tövsiyə olunan) və az.
+ * Hər mətn iki dildə saxlanılır: en (modellər üçün tövsiyə olunan) və az.
  * {tech} yer tutucusu mətndən aşkarlanan texnologiyalarla əvəz olunur.
  */
 window.TEMPLATES = {
+
+  /* Hədəf modellər: struktur stili hər modelin rəsmi tövsiyəsinə uyğundur */
+  MODELS: {
+    claude: { label: 'Claude',  style: 'xml' },           // Anthropic: XML teqləri
+    gpt:    { label: 'ChatGPT', style: 'md' },            // OpenAI: Markdown başlıqlar
+    gemini: { label: 'Gemini',  style: 'md', taskLast: true } // Google: kontekst əvvəl, tapşırıq sonda
+  },
 
   DOMAINS: {
     code: {
@@ -31,7 +38,7 @@ window.TEMPLATES = {
     writing: {
       label: 'Mətn yazımı / Kontent',
       weight: 0.8, // ümumi sözlər ("yaz", "mətn") — bərabərlikdə daha konkret sahə qalib gəlsin
-      kw: ['məqalə', 'article', 'esse', 'essay', 'blog', 'hekayə', 'story', 'şeir', 'poem', 'mətn', 'text', 'yaz ', 'write', 'məktub', 'letter', 'email', 'e-poçt', 'məruzə', 'nitq', 'speech', 'ssenari', 'script for video', 'xəbər', 'redaktə', 'edit', 'rewrite', 'yenidən yaz', 'başlıq', 'headline', 'caption', 'post'],
+      kw: ['məqalə', 'article', 'esse', 'essay', 'blog', 'hekayə', 'story', 'şeir', 'poem', 'mətn', 'text', 'yaz ', 'write', 'məktub', 'letter', 'email', 'e-poçt', 'məruzə', 'nitq', 'speech', 'ssenari', 'script for video', 'xəbər', 'redaktə', 'edit', 'rewrite', 'yenidən yaz', 'başlıq', 'headline'],
       role: {
         en: 'You are an experienced writer and editor who adapts style and voice precisely to the audience. Your writing is clear, vivid and free of filler.',
         az: 'Sən üslubu və səsi auditoriyaya dəqiq uyğunlaşdıran təcrübəli yazıçı və redaktorsan. Yazdıqların aydın, canlı və lüzumsuz sözlərdən təmizdir.'
@@ -53,7 +60,7 @@ window.TEMPLATES = {
 
     marketing: {
       label: 'Marketinq / SMM',
-      kw: ['reklam', 'marketinq', 'marketing', 'smm', 'instagram', 'facebook', 'tiktok', 'linkedin', 'brend', 'brand', 'slogan', 'kampaniya', 'campaign', 'satış', 'sales', 'müştəri', 'customer', 'seo', 'landing', 'kopirayt', 'copywriting', ' ad ', ' ads ', 'advert', 'promo', 'endirim', 'məhsul təsviri', 'product description'],
+      kw: ['reklam', 'marketinq', 'marketing', 'smm', 'instagram', 'facebook', 'tiktok', 'linkedin', 'brend', 'brand', 'slogan', 'kampaniya', 'campaign', 'post', 'caption', 'satış', 'sales', 'müştəri', 'customer', 'seo', 'landing', 'kopirayt', 'copywriting', ' ad ', ' ads ', 'advert', 'promo', 'endirim', 'məhsul təsviri', 'product description'],
       role: {
         en: 'You are a senior marketing strategist and conversion-focused copywriter who understands consumer psychology and platform-specific best practices.',
         az: 'Sən istehlakçı psixologiyasını və platformaya xas ən yaxşı təcrübələri bilən, konversiyaya fokuslanmış senior marketinq strateqi və kopirayterisən.'
@@ -371,7 +378,9 @@ window.TEMPLATES = {
       honesty: 'If any part of the request is ambiguous, state your assumption explicitly and proceed.',
       stepsIntro: 'Work through the task in this order:',
       clarify: 'Before starting, if essential information is missing, ask me up to 3 short, specific clarifying questions and wait for my answers. If everything needed is clear, proceed directly.',
-      thinking: 'Before answering, think through the problem step by step inside <thinking> tags. Then give your final response inside <answer> tags.'
+      thinking: 'Before answering, think through the problem step by step inside <thinking> tags. Then give your final response inside <answer> tags.',
+      thinkingPlain: 'Before answering, think through the problem step by step, then give your final response.',
+      sec: { role: 'Role', context: 'Context', task: 'Task', instructions: 'Instructions', constraints: 'Constraints', output_format: 'Output Format', clarification: 'Clarification' }
     },
     az: {
       defaultTech: 'müvafiq texnologiyalar',
@@ -383,32 +392,44 @@ window.TEMPLATES = {
       honesty: 'Sorğunun hər hansı hissəsi qeyri-müəyyəndirsə, fərziyyəni açıq bildir və davam et.',
       stepsIntro: 'Tapşırığı bu ardıcıllıqla yerinə yetir:',
       clarify: 'Başlamazdan əvvəl, vacib məlumat çatışmırsa, mənə ən çoxu 3 qısa, konkret aydınlaşdırıcı sual ver və cavablarımı gözlə. Hər şey aydındırsa, birbaşa başla.',
-      thinking: 'Cavab verməzdən əvvəl problemi <thinking> teqləri içində addım-addım düşün. Sonra yekun cavabı <answer> teqləri içində ver.'
+      thinking: 'Cavab verməzdən əvvəl problemi <thinking> teqləri içində addım-addım düşün. Sonra yekun cavabı <answer> teqləri içində ver.',
+      thinkingPlain: 'Cavab verməzdən əvvəl problemi addım-addım düşün, sonra yekun cavabı ver.',
+      sec: { role: 'Rol', context: 'Kontekst', task: 'Tapşırıq', instructions: 'Təlimatlar', constraints: 'Məhdudiyyətlər', output_format: 'Cavab formatı', clarification: 'Aydınlaşdırma' }
     }
   },
 
-  /* Meta-prompt: Claude-dan promptu özünün yazmasını xahiş edir */
+  /* Meta-prompt: modeldən promptu özünün yazmasını xahiş edir */
   META: {
     en: {
-      intro: 'You are an expert prompt engineer who specializes in writing prompts for Claude. Turn my rough idea below into a precise, high-quality prompt.',
+      intro: 'You are an expert prompt engineer who specializes in writing prompts for {model}. Turn my rough idea below into a precise, high-quality prompt.',
       known: 'What I already know:',
+      structure: {
+        xml: 'separate sections with XML tags (<role>, <context>, <task>, <constraints>, <output_format>)',
+        md: 'separate sections with clear Markdown headings (## Role, ## Context, ## Task, ## Constraints, ## Output Format)',
+        taskLast: 'separate sections with clear Markdown headings and place the main task at the end, after the context and constraints'
+      },
       labels: { domain: 'Domain', audience: 'Audience', goal: 'Goal', length: 'Length / format', tone: 'Tone', lang: 'The answer should be in' },
       process: [
         'Work in two steps:',
         '1. If essential information is missing (goal, audience, scope or output format), first ask me up to 3 short, specific questions and wait for my answers. If the idea is already clear enough, skip this step.',
-        '2. Write the final prompt. It must: assign a fitting expert role; explain the context and why the task matters; state the task clearly and specifically; list concrete constraints; define the exact output format; separate sections with XML tags (<role>, <context>, <task>, <constraints>, <output_format>); use [square-bracket placeholders] for anything I still need to fill in.',
+        '2. Write the final prompt. It must: assign a fitting expert role; explain the context and why the task matters; state the task clearly and specifically; list concrete constraints; define the exact output format; {structure}; use [square-bracket placeholders] for anything I still need to fill in.',
         '',
         'Return the final prompt in a single code block, then add 2–3 short notes on how I could adapt it.'
       ]
     },
     az: {
-      intro: 'Sən Claude üçün prompt yazmaq üzrə ixtisaslaşmış ekspert prompt mühəndisisən. Aşağıdakı kobud ideyamı dəqiq, yüksək keyfiyyətli prompta çevir.',
+      intro: 'Sən {model} üçün prompt yazmaq üzrə ixtisaslaşmış ekspert prompt mühəndisisən. Aşağıdakı kobud ideyamı dəqiq, yüksək keyfiyyətli prompta çevir.',
       known: 'Artıq bildiklərim:',
+      structure: {
+        xml: 'bölmələri XML teqləri ilə ayırmalı (<role>, <context>, <task>, <constraints>, <output_format>)',
+        md: 'bölmələri aydın Markdown başlıqları ilə ayırmalı (## Role, ## Context, ## Task, ## Constraints, ## Output Format)',
+        taskLast: 'bölmələri aydın Markdown başlıqları ilə ayırmalı və əsas tapşırığı sonda, kontekst və məhdudiyyətlərdən sonra yerləşdirməli'
+      },
       labels: { domain: 'Sahə', audience: 'Auditoriya', goal: 'Məqsəd', length: 'Həcm / format', tone: 'Ton', lang: 'Cavabın dili' },
       process: [
         'İki addımla işlə:',
         '1. Vacib məlumat çatışmırsa (məqsəd, auditoriya, həcm və ya cavab formatı), əvvəlcə mənə ən çoxu 3 qısa, konkret sual ver və cavablarımı gözlə. İdeya kifayət qədər aydındırsa, bu addımı keç.',
-        '2. Yekun promptu yaz. Prompt: uyğun ekspert rolu təyin etməli; konteksti və tapşırığın niyə vacib olduğunu izah etməli; tapşırığı aydın və konkret ifadə etməli; konkret məhdudiyyətləri sadalamalı; dəqiq cavab formatını müəyyən etməli; bölmələri XML teqləri ilə ayırmalı (<role>, <context>, <task>, <constraints>, <output_format>); hələ doldurmalı olduğum hissələr üçün [kvadrat mötərizəli yer tutucular] işlətməlidir.',
+        '2. Yekun promptu yaz. Prompt: uyğun ekspert rolu təyin etməli; konteksti və tapşırığın niyə vacib olduğunu izah etməli; tapşırığı aydın və konkret ifadə etməli; konkret məhdudiyyətləri sadalamalı; dəqiq cavab formatını müəyyən etməli; {structure}; hələ doldurmalı olduğum hissələr üçün [kvadrat mötərizəli yer tutucular] işlətməlidir.',
         '',
         'Yekun promptu bir kod blokunda qaytar, sonra onu necə uyğunlaşdıra biləcəyim barədə 2–3 qısa qeyd əlavə et.'
       ]
