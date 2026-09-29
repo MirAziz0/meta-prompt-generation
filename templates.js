@@ -330,37 +330,95 @@ window.TEMPLATES = {
       az: 'Mini-dərs kimi qur: **Bir cümlədə** → **İzah** (analogiya ilə) → **Nümunə** → **Tipik səhvlər** → **Özünü yoxla** (3 sual).' }
   },
 
-  /* Bölmə başlıqları və ümumi ifadələr */
+  /* Platformalar — mətndə aşkarlananda əlavə məhdudiyyət verir */
+  PLATFORMS: {
+    instagram: {
+      kw: ['instagram', 'insta'],
+      en: 'Instagram: put the hook in the first line (before "more"), stay under ~2,200 characters, use line breaks for readability and end with 5–10 relevant hashtags.',
+      az: 'Instagram: diqqətçəkən ifadəni ilk sətirdə yaz ("daha çox"-dan əvvəl), ~2200 simvoldan az saxla, oxunaqlılıq üçün sətir fasilələri qoy və sonda 5–10 uyğun hashtag əlavə et.'
+    },
+    tiktok: {
+      kw: ['tiktok', 'reels', 'shorts'],
+      en: 'Short-form video: hook in the first 2 seconds, spoken-style lines, 15–45 seconds total, plus on-screen text suggestions.',
+      az: 'Qısa video: ilk 2 saniyədə diqqəti cəlb et, danışıq dilində sətirlər yaz, ümumi müddət 15–45 saniyə olsun, ekran mətni üçün təkliflər əlavə et.'
+    },
+    linkedin: {
+      kw: ['linkedin'],
+      en: 'LinkedIn: professional but human voice, a strong first two lines, short paragraphs, at most 3 hashtags.',
+      az: 'LinkedIn: peşəkar, amma canlı səs, güclü ilk iki sətir, qısa abzaslar, ən çoxu 3 hashtag.'
+    },
+    facebook: {
+      kw: ['facebook'],
+      en: 'Facebook: conversational style, ideally 40–80 words, one clear call to action, minimal hashtags.',
+      az: 'Facebook: danışıq üslubu, ideal olaraq 40–80 söz, bir aydın fəaliyyətə çağırış, minimum hashtag.'
+    },
+    email: {
+      kw: ['email', 'e-mail', 'e-poçt', 'newsletter', 'məktub'],
+      en: 'Email: include a subject line (under 50 characters) and preview text; keep one main call to action.',
+      az: 'E-poçt: mövzu sətri (50 simvoldan az) və önizləmə mətni əlavə et; bir əsas fəaliyyətə çağırış saxla.'
+    }
+  },
+
+  /* Prompt bölmələri və ümumi ifadələr */
   UI: {
     en: {
-      sec: { role: 'Role', context: 'Context', task: 'Task', steps: 'Instructions', constraints: 'Constraints', format: 'Output Format', examples: 'Examples', clarify: 'Clarification' },
-      tag: { role: 'role', context: 'context', task: 'task', steps: 'instructions', constraints: 'constraints', format: 'output_format', examples: 'examples', clarify: 'clarification' },
       defaultTech: 'the relevant technologies',
       taskIntro: 'Here is the request you need to fulfill:',
       audience: a => `The target audience is: ${a}. Tailor vocabulary, depth and examples to them.`,
+      goal: g => `The end goal: ${g}. Optimize the result for this goal.`,
+      length: l => `Length / scope: ${l}.`,
       respondIn: l => `Respond in ${l}.`,
       honesty: 'If any part of the request is ambiguous, state your assumption explicitly and proceed.',
       stepsIntro: 'Work through the task in this order:',
-      examplesText: 'Here is an example of the style and quality I expect:\n<example>\n[Paste a sample of a good result here]\n</example>\nMatch its quality and style, but do not copy its content.',
-      examplesTextMd: 'Here is an example of the style and quality I expect:\n"""\n[Paste a sample of a good result here]\n"""\nMatch its quality and style, but do not copy its content.',
-      clarifyText: 'Before starting, if essential information is missing, ask me up to 3 short, specific clarifying questions and wait for my answers. If everything needed is clear, proceed directly.',
-      thinking: 'Before answering, think through the problem step by step inside <thinking> tags. Then give your final response inside <answer> tags.',
-      thinkingMd: 'Before answering, briefly think through the problem step by step, then give your final response.'
+      clarify: 'Before starting, if essential information is missing, ask me up to 3 short, specific clarifying questions and wait for my answers. If everything needed is clear, proceed directly.',
+      thinking: 'Before answering, think through the problem step by step inside <thinking> tags. Then give your final response inside <answer> tags.'
     },
     az: {
-      sec: { role: 'Rol', context: 'Kontekst', task: 'Tapşırıq', steps: 'Təlimatlar', constraints: 'Məhdudiyyətlər', format: 'Cavab formatı', examples: 'Nümunələr', clarify: 'Aydınlaşdırma' },
-      tag: { role: 'role', context: 'context', task: 'task', steps: 'instructions', constraints: 'constraints', format: 'output_format', examples: 'examples', clarify: 'clarification' },
       defaultTech: 'müvafiq texnologiyalar',
       taskIntro: 'Yerinə yetirməli olduğun sorğu budur:',
       audience: a => `Hədəf auditoriya: ${a}. Söz ehtiyatını, dərinliyi və nümunələri onlara uyğunlaşdır.`,
+      goal: g => `Son məqsəd: ${g}. Nəticəni bu məqsədə uyğun optimallaşdır.`,
+      length: l => `Həcm / əhatə: ${l}.`,
       respondIn: l => `Cavabı ${l} ver.`,
       honesty: 'Sorğunun hər hansı hissəsi qeyri-müəyyəndirsə, fərziyyəni açıq bildir və davam et.',
       stepsIntro: 'Tapşırığı bu ardıcıllıqla yerinə yetir:',
-      examplesText: 'Gözlədiyim üslub və keyfiyyətə nümunə:\n<example>\n[Yaxşı nəticə nümunəsini bura yapışdırın]\n</example>\nKeyfiyyətinə və üslubuna uyğunlaş, amma məzmununu köçürmə.',
-      examplesTextMd: 'Gözlədiyim üslub və keyfiyyətə nümunə:\n"""\n[Yaxşı nəticə nümunəsini bura yapışdırın]\n"""\nKeyfiyyətinə və üslubuna uyğunlaş, amma məzmununu köçürmə.',
-      clarifyText: 'Başlamazdan əvvəl, vacib məlumat çatışmırsa, mənə ən çoxu 3 qısa, konkret aydınlaşdırıcı sual ver və cavablarımı gözlə. Hər şey aydındırsa, birbaşa başla.',
-      thinking: 'Cavab verməzdən əvvəl problemi <thinking> teqləri içində addım-addım düşün. Sonra yekun cavabı <answer> teqləri içində ver.',
-      thinkingMd: 'Cavab verməzdən əvvəl problemi qısaca addım-addım düşün, sonra yekun cavabı ver.'
+      clarify: 'Başlamazdan əvvəl, vacib məlumat çatışmırsa, mənə ən çoxu 3 qısa, konkret aydınlaşdırıcı sual ver və cavablarımı gözlə. Hər şey aydındırsa, birbaşa başla.',
+      thinking: 'Cavab verməzdən əvvəl problemi <thinking> teqləri içində addım-addım düşün. Sonra yekun cavabı <answer> teqləri içində ver.'
     }
-  }
+  },
+
+  /* Meta-prompt: Claude-dan promptu özünün yazmasını xahiş edir */
+  META: {
+    en: {
+      intro: 'You are an expert prompt engineer who specializes in writing prompts for Claude. Turn my rough idea below into a precise, high-quality prompt.',
+      known: 'What I already know:',
+      labels: { domain: 'Domain', audience: 'Audience', goal: 'Goal', length: 'Length / format', tone: 'Tone', lang: 'The answer should be in' },
+      process: [
+        'Work in two steps:',
+        '1. If essential information is missing (goal, audience, scope or output format), first ask me up to 3 short, specific questions and wait for my answers. If the idea is already clear enough, skip this step.',
+        '2. Write the final prompt. It must: assign a fitting expert role; explain the context and why the task matters; state the task clearly and specifically; list concrete constraints; define the exact output format; separate sections with XML tags (<role>, <context>, <task>, <constraints>, <output_format>); use [square-bracket placeholders] for anything I still need to fill in.',
+        '',
+        'Return the final prompt in a single code block, then add 2–3 short notes on how I could adapt it.'
+      ]
+    },
+    az: {
+      intro: 'Sən Claude üçün prompt yazmaq üzrə ixtisaslaşmış ekspert prompt mühəndisisən. Aşağıdakı kobud ideyamı dəqiq, yüksək keyfiyyətli prompta çevir.',
+      known: 'Artıq bildiklərim:',
+      labels: { domain: 'Sahə', audience: 'Auditoriya', goal: 'Məqsəd', length: 'Həcm / format', tone: 'Ton', lang: 'Cavabın dili' },
+      process: [
+        'İki addımla işlə:',
+        '1. Vacib məlumat çatışmırsa (məqsəd, auditoriya, həcm və ya cavab formatı), əvvəlcə mənə ən çoxu 3 qısa, konkret sual ver və cavablarımı gözlə. İdeya kifayət qədər aydındırsa, bu addımı keç.',
+        '2. Yekun promptu yaz. Prompt: uyğun ekspert rolu təyin etməli; konteksti və tapşırığın niyə vacib olduğunu izah etməli; tapşırığı aydın və konkret ifadə etməli; konkret məhdudiyyətləri sadalamalı; dəqiq cavab formatını müəyyən etməli; bölmələri XML teqləri ilə ayırmalı (<role>, <context>, <task>, <constraints>, <output_format>); hələ doldurmalı olduğum hissələr üçün [kvadrat mötərizəli yer tutucular] işlətməlidir.',
+        '',
+        'Yekun promptu bir kod blokunda qaytar, sonra onu necə uyğunlaşdıra biləcəyim barədə 2–3 qısa qeyd əlavə et.'
+      ]
+    }
+  },
+
+  /* Boş başlanğıc üçün nümunə ideyalar */
+  EXAMPLES: [
+    'Python-da CSV faylını oxuyub aylıq satış hesabatı çıxaran skript yaz',
+    'Yeni açılan kafe üçün Instagram reklam postu hazırla',
+    '10-cu sinif şagirdlərinə fotosintezi sadə dillə izah et'
+  ]
 };

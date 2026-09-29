@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Meta-Prompt Generator</title>
+  <meta name="description" content="Sadə ideyanı Claude üçün strukturlaşdırılmış prompta çevirin.">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,110 +13,70 @@
       <span class="logo">✦</span>
       <div>
         <h1>Meta-Prompt Generator</h1>
-        <p class="sub">Sadə ideya → Claude üçün strukturlaşdırılmış prompt</p>
+        <p class="sub">Sadə ideya → Claude üçün güclü prompt</p>
       </div>
     </div>
     <div class="seg" role="group" aria-label="Prompt dili">
       <span class="seg-label">Prompt dili</span>
-      <button class="seg-btn active" data-plang="en">EN</button>
+      <button class="seg-btn active" data-plang="en" title="Claude təlimatları ingiliscə ən dəqiq izləyir">EN</button>
       <button class="seg-btn" data-plang="az">AZ</button>
     </div>
   </header>
 
   <main class="layout">
-    <!-- SOL: giriş və parametrlər -->
-    <section class="panel input-panel">
-      <label class="field-label" for="idea">İdeyanız və ya tapşırığınız</label>
-      <textarea id="idea" placeholder="Məs: Python-da CSV faylını oxuyub satış hesabatı çıxaran skript yaz&#10;Məs: Kafe üçün Instagram reklam mətni&#10;Məs: 10-cu sinif şagirdlərinə fotosintezi izah et" autofocus></textarea>
+    <!-- SOL: giriş -->
+    <section class="panel">
+      <label class="field-label" for="idea">Nə etmək istəyirsiniz?</label>
+      <textarea id="idea" placeholder="İdeyanızı bir-iki cümlə ilə yazın…" autofocus></textarea>
 
-      <div class="analysis" id="analysis">
-        <div class="meter"><div class="meter-fill" id="meterFill"></div></div>
-        <div class="analysis-row">
-          <span id="qualityLabel" class="quality-label">Yazmağa başlayın…</span>
-          <span id="detected" class="detected"></span>
-        </div>
-        <ul id="hints" class="hints"></ul>
+      <div class="examples" id="examples"><span>Nümunə:</span></div>
+
+      <div class="details-grid">
+        <label>Kim üçün?
+          <input id="audience" type="text" placeholder="məs: yeni başlayanlar">
+        </label>
+        <label>Məqsəd
+          <input id="goal" type="text" placeholder="məs: imtahana hazırlaşmaq">
+        </label>
+        <label>Həcm / format
+          <input id="length" type="text" placeholder="məs: 5 maddə, 300 söz">
+        </label>
       </div>
-
-      <details class="group" open>
-        <summary>Prompt bölmələri</summary>
-        <div class="chips" id="sections">
-          <label class="chip"><input type="checkbox" value="role" checked><span>Role / Persona</span></label>
-          <label class="chip"><input type="checkbox" value="context" checked><span>Context</span></label>
-          <label class="chip"><input type="checkbox" value="task" checked><span>Task</span></label>
-          <label class="chip"><input type="checkbox" value="steps" checked><span>Addımlar</span></label>
-          <label class="chip"><input type="checkbox" value="constraints" checked><span>Constraints</span></label>
-          <label class="chip"><input type="checkbox" value="format" checked><span>Output Format</span></label>
-          <label class="chip"><input type="checkbox" value="examples"><span>Nümunə yeri</span></label>
-          <label class="chip"><input type="checkbox" value="clarify"><span>Aydınlaşdırıcı suallar</span></label>
-          <label class="chip"><input type="checkbox" value="thinking"><span>Düşünmə (&lt;thinking&gt;)</span></label>
-        </div>
-      </details>
-
-      <details class="group" open>
-        <summary>Parametrlər</summary>
-        <div class="grid">
-          <label>Sahə
-            <select id="domain"></select>
-          </label>
-          <label>Ton
-            <select id="tone"></select>
-          </label>
-          <label>Cavab dili
-            <select id="rlang"></select>
-          </label>
-          <label>Cavab formatı
-            <select id="format"></select>
-          </label>
-          <label>Detal səviyyəsi
-            <select id="detail"></select>
-          </label>
-          <label>Struktur stili
-            <select id="style">
-              <option value="xml">XML teqlər (tövsiyə)</option>
-              <option value="md">Markdown başlıqlar</option>
-            </select>
-          </label>
-        </div>
-      </details>
+      <p class="note">Bu sahələr opsionaldır, amma nəticəni ən çox yaxşılaşdıran məhz onlardır.</p>
 
       <details class="group">
-        <summary>Əlavə (opsional)</summary>
-        <div class="stack">
-          <label>Xüsusi rol
-            <input id="customRole" type="text" placeholder="Boş qalsa, avtomatik seçilir">
-          </label>
-          <label>Hədəf auditoriya
-            <input id="audience" type="text" placeholder="Məs: yeni başlayan proqramçılar, 25-35 yaş müştərilər">
-          </label>
-          <label>Əlavə məhdudiyyətlər (hər sətir bir qayda)
-            <textarea id="extra" rows="3" placeholder="Məs: 300 sözdən çox olmasın&#10;Xarici kitabxana istifadə etmə"></textarea>
-          </label>
+        <summary>Parametrlər</summary>
+        <div class="grid">
+          <label>Sahə <select id="domain"></select></label>
+          <label>Ton <select id="tone"></select></label>
+          <label>Cavab dili <select id="rlang"></select></label>
+          <label>Cavab formatı <select id="format"></select></label>
+          <label>Detal səviyyəsi <select id="detail"></select></label>
+        </div>
+        <div class="toggles">
+          <label class="toggle"><input type="checkbox" id="clarify"><span>Claude əvvəlcə sual versin</span></label>
+          <label class="toggle"><input type="checkbox" id="thinking"><span>Addım-addım düşünsün</span></label>
         </div>
       </details>
-
-      <div class="actions">
-        <button id="resetBtn" class="btn ghost" type="button">Sıfırla</button>
-        <button id="generateBtn" class="btn primary" type="button">Generasiya et <kbd>Ctrl+Enter</kbd></button>
-      </div>
     </section>
 
     <!-- SAĞ: nəticə -->
     <section class="panel output-panel">
-      <div class="output-head">
-        <h2>Hazır prompt</h2>
-        <div class="output-actions">
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-mode="prompt" role="tab">Hazır prompt</button>
+        <button class="tab" data-mode="meta" role="tab">Claude özü yazsın</button>
+      </div>
+      <p class="mode-help" id="modeHelp"></p>
+
+      <textarea id="output" class="output" spellcheck="false" placeholder="Sol tərəfdə ideyanızı yazın — prompt burada canlı yaranacaq."></textarea>
+
+      <div class="output-foot">
+        <span id="detected" class="detected"></span>
+        <div class="foot-right">
           <span id="stats" class="stats"></span>
-          <button id="downloadBtn" class="btn ghost small" type="button" disabled>.txt</button>
-          <button id="copyBtn" class="btn primary small" type="button" disabled>Copy Prompt</button>
+          <button id="copyBtn" class="btn" type="button" disabled>Copy Prompt</button>
         </div>
       </div>
-      <pre id="output" class="output"><span class="empty">Sol tərəfdə ideyanızı yazın — prompt burada canlı yaranacaq.</span></pre>
-
-      <details class="group history">
-        <summary>Son kopyalananlar</summary>
-        <ul id="history" class="history-list"></ul>
-      </details>
     </section>
   </main>
 

@@ -1,10 +1,12 @@
 /*
  * Prompt mühərriki: istifadəçinin ideyasını analiz edir (sahə, niyyət,
- * texnologiya, dil, keyfiyyət) və strukturlaşdırılmış prompt qurur.
- * DOM-dan asılı deyil — təmiz funksiyalardır.
+ * texnologiya, platforma, dil) və iki növ nəticə qurur:
+ *   build()     — şablonlarla hazırlanmış, strukturlaşdırılmış prompt
+ *   buildMeta() — Claude-dan promptu özünün yazmasını xahiş edən meta-prompt
+ * DOM-dan asılı deyil — həm brauzerdə, həm Node-da (testlər) işləyir.
  */
-(function () {
-  const T = window.TEMPLATES;
+(function (root) {
+  const T = root.TEMPLATES;
 
   const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   // 'az' locale "I"-ni "ı"-ya çevirir (Instagram → ınstagram), ona görə əl ilə normallaşdırırıq.
@@ -44,6 +46,11 @@
     return found.slice(0, 4);
   }
 
+  function detectPlatforms(text) {
+    const t = lower(text);
+    return Object.keys(T.PLATFORMS).filter(k => T.PLATFORMS[k].kw.some(kw => matches(t, kw)));
+  }
+
   // Dil sözlərin əksəriyyətinə görə təyin olunur — tək bir yer adı (İçərişəhər) nəticəni dəyişmir.
   function detectLang(text) {
     const words = text.split(/[^\p{L}]+/u).filter(Boolean);
@@ -56,98 +63,92 @@
     return 'en';
   }
 
-  // İdeyanın nə qədər "prompt-a hazır" olduğunu qiymətləndirir və məsləhət verir.
-  function analyze(text) {
-    const t = lower(text.trim());
-    const words = t ? t.split(/\s+/).length : 0;
-    const checks = [
-      { ok: words >= 6, pts: 25, hint: 'Bir az daha ətraflı yazın — nə etmək istədiyinizi 1-2 cümlə ilə açın.' },
-      { ok: words >= 15, pts: 15, hint: 'Daha çox detal (şərtlər, nümunələr) nəticəni əhəmiyyətli dərəcədə yaxşılaşdırır.' },
-      { ok: /(üçün|for |auditoriya|audience|tələbə|şagird|müştəri|customer|beginner|yeni başlayan|uşaq|mütəxəssis)/.test(t), pts: 20, hint: 'Kimin üçün olduğunu qeyd edin (auditoriya) — və ya "Əlavə" bölməsində doldurun.' },
-      { ok: /(format|cədvəl|table|json|siyahı|list|söz|word|abzas|paragraph|sətir|slayd|slide|addım|step)/.test(t), pts: 15, hint: 'İstədiyiniz formatı və ya həcmi göstərin (məs: "5 maddə", "300 söz").' },
-      { ok: /(məqsəd|goal|ki,|so that|in order|istəyirəm|want|lazımdır|need)/.test(t), pts: 15, hint: 'Son məqsədi yazın — nəticəni nə üçün istifadə edəcəksiniz?' },
-      { ok: /\d/.test(t), pts: 10, hint: 'Konkret rəqəmlər (say, müddət, büdcə) Claude-a dəqiq hədəf verir.' }
-    ];
-    const score = checks.reduce((n, c) => n + (c.ok ? c.pts : 0), 0);
-    return { score, words, hints: words ? checks.filter(c => !c.ok).map(c => c.hint).slice(0, 3) : [] };
-  }
+  const fill = (str, vars) => str.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? '');
+  const block = (tag, body) => `<${tag}>\n${body}\n</${tag}>`;
 
-  function fill(str, vars) {
-    return str.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? '');
+  // Hər iki rejim üçün ortaq analiz
+  function analyze(opts) {
+    const idea = opts.idea.trim();
+    const domainKey = opts.domain === 'auto' ? detectDomain(idea) : opts.domain;
+    const intentKey = detectIntent(idea);
+    const intent = intentKey ? T.INTENTS[intentKey] : null;
+    return {
+      idea, domainKey, intentKey,
+      tech: detectTech(idea),
+      platforms: detectPlatforms(idea),
+      formatKey: opts.format !== 'auto' ? opts.format : (intent && intent.format) || T.DOMAINS[domainKey].format,
+      rlangKey: opts.rlang === 'same' ? detectLang(idea) : opts.rlang
+    };
   }
 
   /*
-   * opts: { idea, plang, style, sections:Set, domain, tone, rlang, format,
-   *         detail, customRole, audience, extra }
+   * opts: { idea, plang, domain, tone, rlang, format, detail,
+   *         audience, goal, length, clarify, thinking }
    */
   function build(opts) {
     const L = opts.plang;
     const U = T.UI[L];
-    const idea = opts.idea.trim();
-    const domainKey = opts.domain === 'auto' ? detectDomain(idea) : opts.domain;
-    const D = T.DOMAINS[domainKey];
-    const intentKey = detectIntent(idea);
-    const intent = intentKey ? T.INTENTS[intentKey] : null;
-    const tech = detectTech(idea);
-    const vars = { tech: tech.length ? tech.join(', ') : U.defaultTech };
-    const xml = opts.style === 'xml';
-    const has = k => opts.sections.has(k);
+    const m = analyze(opts);
+    const D = T.DOMAINS[m.domainKey];
+    const vars = { tech: m.tech.length ? m.tech.join(', ') : U.defaultTech };
+    const audience = (opts.audience || '').trim();
+    const goal = (opts.goal || '').trim();
+    const length = (opts.length || '').trim();
 
-    const formatKey = opts.format !== 'auto' ? opts.format : (intent && intent.format) || D.format;
-    const rlangKey = opts.rlang === 'same' ? detectLang(idea) : opts.rlang;
+    const context = [fill(D.context[L], vars)];
+    if (audience) context.push(U.audience(audience));
+    if (goal) context.push(U.goal(goal));
 
-    const parts = [];
-    const add = (key, body) => {
-      if (!body) return;
-      parts.push(xml
-        ? `<${U.tag[key]}>\n${body}\n</${U.tag[key]}>`
-        : `## ${U.sec[key]}\n${body}`);
-    };
+    const task = [U.taskIntro, block('request', m.idea)];
+    if (m.intentKey) task.push(T.INTENTS[m.intentKey][L]);
 
-    if (has('role')) add('role', opts.customRole.trim()
-      ? (L === 'en' ? `You are ${opts.customRole.trim()}.` : `Sənin rolun: ${opts.customRole.trim()}.`)
-      : fill(D.role[L], vars));
+    const constraints = [];
+    const tone = T.TONES[opts.tone];
+    if (tone && tone[L]) constraints.push(tone[L]);
+    const rl = T.RESPONSE_LANGS[m.rlangKey];
+    if (rl && rl[L]) constraints.push(U.respondIn(rl[L]));
+    if (length) constraints.push(U.length(length));
+    constraints.push(T.DETAIL[opts.detail][L]);
+    m.platforms.forEach(p => constraints.push(T.PLATFORMS[p][L]));
+    D.constraints[L].forEach(c => constraints.push(fill(c, vars)));
+    constraints.push(U.honesty);
 
-    if (has('context')) {
-      const ctx = [fill(D.context[L], vars)];
-      if (opts.audience.trim()) ctx.push(U.audience(opts.audience.trim()));
-      add('context', ctx.join('\n'));
-    }
+    const parts = [
+      block('role', fill(D.role[L], vars)),
+      block('context', context.join('\n')),
+      block('task', task.join('\n\n')),
+      block('instructions', U.stepsIntro + '\n' + D.steps[L].map((s, i) => `${i + 1}. ${fill(s, vars)}`).join('\n')),
+      block('constraints', constraints.map(c => `- ${c}`).join('\n')),
+      block('output_format', T.FORMATS[m.formatKey][L])
+    ];
+    if (opts.clarify) parts.push(block('clarification', U.clarify));
+    if (opts.thinking) parts.push(U.thinking);
 
-    if (has('task')) {
-      const req = xml ? `<request>\n${idea}\n</request>` : `"""\n${idea}\n"""`;
-      const lines = [U.taskIntro, req];
-      if (intent) lines.push(intent[L]);
-      add('task', lines.join('\n\n'));
-    }
-
-    if (has('steps')) {
-      add('steps', U.stepsIntro + '\n' + D.steps[L].map((s, i) => `${i + 1}. ${fill(s, vars)}`).join('\n'));
-    }
-
-    if (has('constraints')) {
-      const list = [];
-      const tone = T.TONES[opts.tone];
-      if (tone && tone[L]) list.push(tone[L]);
-      const rl = T.RESPONSE_LANGS[rlangKey];
-      if (rl && rl[L]) list.push(U.respondIn(rl[L]));
-      list.push(T.DETAIL[opts.detail][L]);
-      D.constraints[L].forEach(c => list.push(fill(c, vars)));
-      opts.extra.split('\n').map(s => s.trim()).filter(Boolean).forEach(s => list.push(s));
-      list.push(U.honesty);
-      add('constraints', list.map(c => `- ${c}`).join('\n'));
-    }
-
-    if (has('format')) add('format', T.FORMATS[formatKey][L]);
-    if (has('examples')) add('examples', xml ? U.examplesText : U.examplesTextMd);
-    if (has('clarify')) add('clarify', U.clarifyText);
-    if (has('thinking')) parts.push(xml ? U.thinking : U.thinkingMd);
-
-    return {
-      text: parts.join('\n\n'),
-      meta: { domainKey, intentKey, tech, formatKey, rlangKey }
-    };
+    return { text: parts.join('\n\n'), meta: m };
   }
 
-  window.PromptEngine = { build, analyze, detectDomain, detectIntent, detectTech, detectLang };
-})();
+  function buildMeta(opts) {
+    const L = opts.plang;
+    const M = T.META[L];
+    const m = analyze(opts);
+    const known = [];
+    const add = (label, v) => { if (v && String(v).trim()) known.push(`- ${label}: ${String(v).trim()}`); };
+
+    if (m.domainKey !== 'general') {
+      add(M.labels.domain, T.DOMAINS[m.domainKey].label + (m.tech.length ? ` (${m.tech.join(', ')})` : ''));
+    }
+    add(M.labels.audience, opts.audience);
+    add(M.labels.goal, opts.goal);
+    add(M.labels.length, opts.length);
+    if (T.TONES[opts.tone] && opts.tone !== 'auto') add(M.labels.tone, T.TONES[opts.tone].label);
+    const rl = T.RESPONSE_LANGS[m.rlangKey];
+    if (rl && rl.en) add(M.labels.lang, rl.en);
+
+    const parts = [M.intro, block('idea', m.idea)];
+    if (known.length) parts.push(M.known + '\n' + known.join('\n'));
+    parts.push(M.process.join('\n'));
+    return { text: parts.join('\n\n'), meta: m };
+  }
+
+  root.PromptEngine = { build, buildMeta, detectDomain, detectIntent, detectTech, detectPlatforms, detectLang };
+})(typeof window !== 'undefined' ? window : globalThis);
