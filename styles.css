@@ -61,16 +61,28 @@ h1 {
 }
 .lead { margin: 0 auto 32px; color: #333836; font-size: 16.5px; max-width: 700px; }
 
+/* Fırlanan rainbow haşiyə: conic-gradient-in bucağı animasiya olunur */
+@property --angle { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+@keyframes spin { to { --angle: 360deg; } }
+
 .composer {
-  position: relative; text-align: left; background: var(--surface);
-  border: 1.5px solid #8fa3f5; border-radius: var(--radius); padding: 16px 16px 14px;
-  box-shadow: 0 0 0 5px rgba(143, 163, 245, .12);
+  --rainbow: conic-gradient(from var(--angle), #ff5f6d, #ffb347, #ffe66d, #7ed89a, #4fc3f7, #6f86ff, #b58cff, #ff7ad9, #ff5f6d);
+  position: relative; text-align: left; border-radius: var(--radius); padding: 16px 16px 14px;
+  border: 2px solid transparent;
+  background: linear-gradient(var(--surface), var(--surface)) padding-box, var(--rainbow) border-box;
+  animation: spin 4s linear infinite;
 }
 .composer::before {
-  content: ""; position: absolute; inset: -6px; border-radius: 20px; z-index: -1;
-  background: var(--glow); opacity: .28; filter: blur(8px);
+  --rainbow: conic-gradient(from var(--angle), #ff5f6d, #ffb347, #ffe66d, #7ed89a, #4fc3f7, #6f86ff, #b58cff, #ff7ad9, #ff5f6d);
+  content: ""; position: absolute; inset: -4px; border-radius: 18px; z-index: -1;
+  background: var(--rainbow); opacity: .35; filter: blur(14px);
+  animation: spin 4s linear infinite;
 }
-.composer:focus-within { border-color: var(--green); }
+.composer:focus-within, .composer:focus-within::before { animation-duration: 2s; }
+.composer:focus-within::before { opacity: .5; }
+@media (prefers-reduced-motion: reduce) {
+  .composer, .composer::before { animation: none; }
+}
 #idea {
   width: 100%; min-height: 110px; border: 0; outline: none; resize: vertical;
   font: 16px/1.55 var(--sans); color: var(--text); background: transparent; padding: 0;
