@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Meta-Prompt Generator</title>
-  <meta name="description" content="Sadə ideyanı Claude, ChatGPT və Gemini üçün strukturlaşdırılmış prompta çevirin.">
+  <meta name="description" content="Sadə ideyanı Claude, ChatGPT, Gemini, Grok, o3, Llama və agentlər üçün strukturlaşdırılmış prompta çevirin.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@700;800&family=Noto+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -23,7 +23,7 @@
   <!-- HERO: giriş -->
   <section class="hero">
     <h1>AI Prompt Generator</h1>
-    <p class="lead">Sadə ideyanı Claude, ChatGPT və Gemini üçün güclü, strukturlaşdırılmış prompta çevirin.</p>
+    <p class="lead">Sadə ideyanı Claude, ChatGPT, Gemini və digər modellər üçün güclü, strukturlaşdırılmış prompta çevirin.</p>
 
     <div class="composer">
       <textarea id="idea" placeholder="Prompt yarat: …" autofocus></textarea>
@@ -32,6 +32,7 @@
           <button class="seg-btn active" data-model="claude">Claude</button>
           <button class="seg-btn" data-model="gpt">ChatGPT</button>
           <button class="seg-btn" data-model="gemini">Gemini</button>
+          <select id="moreModels" class="seg-select" aria-label="Digər modellər"></select>
         </div>
         <button id="generateBtn" class="btn" type="button">Generate <span aria-hidden="true">→</span></button>
       </div>
@@ -62,7 +63,7 @@
       </div>
       <div class="toggles">
         <label class="toggle"><input type="checkbox" id="clarify"><span>Əvvəlcə sual versin</span></label>
-        <label class="toggle"><input type="checkbox" id="thinking"><span>Addım-addım düşünsün</span></label>
+        <label class="toggle" title="Nəticə, fərziyyələr, dəlil, yoxlamalar və qeyri-müəyyənlik — səhv tapma və müqayisədə avtomatik qoşulur"><input type="checkbox" id="reasoning"><span>Yoxlanıla bilən cavab</span></label>
       </div>
     </details>
   </section>
@@ -75,6 +76,7 @@
       <button class="tab" data-mode="meta" role="tab" id="metaTab">Claude özü yazsın</button>
     </div>
     <p class="mode-help" id="modeHelp"></p>
+    <p class="notice" id="notice" hidden></p>
 
     <div class="output-card">
       <textarea id="output" class="output" spellcheck="false" placeholder="Yuxarıda ideyanızı yazın — prompt burada canlı yaranacaq."></textarea>

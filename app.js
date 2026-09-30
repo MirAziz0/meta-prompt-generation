@@ -8,17 +8,16 @@
   const el = {
     idea: $('idea'), audience: $('audience'), goal: $('goal'), length: $('length'),
     domain: $('domain'), tone: $('tone'), rlang: $('rlang'), format: $('format'), detail: $('detail'),
-    clarify: $('clarify'), thinking: $('thinking'),
+    clarify: $('clarify'), reasoning: $('reasoning'), moreModels: $('moreModels'), notice: $('notice'),
     output: $('output'), copy: $('copyBtn'), stats: $('stats'), detected: $('detected'),
     modeHelp: $('modeHelp'), metaTab: $('metaTab'), examples: $('examples'), toast: $('toast')
   };
 
   const MODE_HELP = {
-    prompt: to => `Şablonlarla dərhal qurulmuş prompt. Kopyalayın və ${to} yapışdırın — lazım olsa, əvvəlcə burada düzəldin.`,
-    meta: to => `Bu mətni ${to} verin: o, lazım olsa suallar verəcək və ideyanız üçün xüsusi prompt yazacaq.`
+    prompt: M => `🎯 ${M.label} · 💡 ${M.why}`,
+    meta: M => `Bu mətni ${M.label} pəncərəsinə yapışdırın: o, lazım olsa suallar verəcək və ideyanız üçün xüsusi prompt yazacaq.`
   };
-  // Azərbaycan dilində yönlük hal: "Claude-a", "ChatGPT-yə"
-  const TO = { claude: 'Claude-a', gpt: 'ChatGPT-yə', gemini: 'Gemini-yə' };
+  const AGENT_NOTICE = '⚠️ Bu prompt fayllara və terminala real çıxışı olan agent üçündür. Yapışdırmazdan əvvəl [kvadrat mötərizəli] yerləri, fayl yollarını, qadağan olunmuş əməliyyatları və dayanma şərtlərini yoxlayın.';
 
   let plang = 'en';
   let model = 'claude';
@@ -35,6 +34,8 @@
   fillSelect(el.rlang, T.RESPONSE_LANGS);
   fillSelect(el.format, T.FORMATS);
   fillSelect(el.detail, T.DETAIL);
+  el.moreModels.innerHTML = '<option value="">Digər ▾</option>' + Object.entries(T.MODELS)
+    .filter(([, v]) => !v.main).map(([k, v]) => `<option value="${k}">${v.label}</option>`).join('');
   el.detail.value = 'standard';
 
   T.EXAMPLES.forEach(text => {
@@ -46,7 +47,7 @@
 
   /* ---------- Parametrlərin yadda saxlanması (brauzerdə) ---------- */
   const SELECTS = ['domain', 'tone', 'rlang', 'format', 'detail'];
-  const CHECKS = ['clarify', 'thinking'];
+  const CHECKS = ['clarify', 'reasoning'];
 
   function saveSettings() {
     const s = { plang, mode, model };
@@ -71,9 +72,17 @@
   function syncControls() {
     document.querySelectorAll('[data-plang]').forEach(b => b.classList.toggle('active', b.dataset.plang === plang));
     document.querySelectorAll('[data-model]').forEach(b => b.classList.toggle('active', b.dataset.model === model));
-    el.metaTab.textContent = `${T.MODELS[model].label} özü yazsın`;
-    document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
-    el.modeHelp.textContent = MODE_HELP[mode](TO[model]);
+    const M = T.MODELS[model];
+    el.moreModels.value = M.main ? '' : model;
+    el.moreModels.classList.toggle('active', !M.main);
+    el.metaTab.textContent = M.main ? `${M.label} özü yazsın` : 'Model özü yazsın';
+    el.moreModels.addEventListener('change', () => {
+    if (el.moreModels.value) { model = el.moreModels.value; saveSettings(); render(); }
+  });
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+    el.modeHelp.textContent = MODE_HELP[mode](M);
+    el.notice.hidden = !(M.agent && mode === 'prompt');
+    el.notice.textContent = AGENT_NOTICE;
   }
 
   function updateStats() {
@@ -97,10 +106,15 @@
       domain: el.domain.value, tone: el.tone.value, rlang: el.rlang.value,
       format: el.format.value, detail: el.detail.value,
       audience: el.audience.value, goal: el.goal.value, length: el.length.value,
-      clarify: el.clarify.checked, thinking: el.thinking.checked
+      clarify: el.clarify.checked, reasoning: el.reasoning.checked
     };
     const { text, meta } = mode === 'meta' ? E.buildMeta(opts) : E.build(opts);
     el.output.value = text;
+    if (meta.secretsRemoved && !render._warned) {
+      toast('🔒 API açarı / parol promptdan silindi — onları environment variable kimi saxlayın', true);
+      render._warned = true;
+    }
+    if (!meta.secretsRemoved) render._warned = false;
 
     const bits = [`Sahə: <b>${T.DOMAINS[meta.domainKey].label}</b>`];
     if (meta.tech.length) bits.push(`<b>${escapeHtml(meta.tech.join(', '))}</b>`);
@@ -141,7 +155,7 @@
     if (!text) { toast('Əvvəlcə ideyanızı yazın', true); el.idea.focus(); return; }
     try {
       await copyText(text);
-      toast(mode === 'meta' ? `✓ Kopyalandı — ${TO[model]} yapışdırın, o, promptu yazacaq` : `✓ Prompt kopyalandı — ${TO[model]} yapışdırın`);
+      toast(mode === 'meta' ? `✓ Kopyalandı — ${T.MODELS[model].label} pəncərəsinə yapışdırın, o, promptu yazacaq` : `✓ Prompt kopyalandı — ${T.MODELS[model].label} pəncərəsinə yapışdırın`);
     } catch { toast('Kopyalamaq alınmadı', true); }
   }
 

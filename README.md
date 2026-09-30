@@ -1,18 +1,24 @@
 # meta-prompt-generation
 
-Sadə ideyanı **Claude, ChatGPT və Gemini** üçün strukturlaşdırılmış, güclü prompta çevirən veb tətbiq. Tam brauzerdə işləyir — API açarı lazım deyil.
+Sadə ideyanı **Claude, ChatGPT, Gemini və digər AI modelləri** üçün strukturlaşdırılmış, güclü prompta çevirən veb tətbiq. Tam brauzerdə işləyir — API açarı lazım deyil.
 
 **Canlı:** https://miraziz0.github.io/meta-prompt-generation/
 
 ## Modellər
 
-Hər model üçün prompt onun rəsmi tövsiyəsinə uyğun qurulur:
+Hər model üçün prompt onun rəsmi tövsiyəsinə və [prompt-master](https://github.com/nidhinjs/prompt-master) qaydalarına uyğun qurulur:
 
 | Model | Struktur |
 |---|---|
-| Claude | XML teqləri (`<role>`, `<task>`…) |
-| ChatGPT | Markdown başlıqlar (`## Role`…) |
-| Gemini | Markdown başlıqlar, əsas tapşırıq sonda |
+| Claude | XML teqləri, aydın uğur meyarı |
+| ChatGPT | Yığcam Goal / Context / Constraints / Done |
+| Gemini | Mənbə qaydası, sərt format kilidi, tapşırıq sonda |
+| Grok | Nəticəyə fokuslu; aktual faktlar üçün Web/X axtarışı |
+| o3 / DeepSeek-R1 | Qısa (<200 söz), heç bir düşüncə skeleti olmadan |
+| Llama / Mistral | Qısa, düz struktur, açıq rol |
+| Claude Code / Cursor | Agent brifi: hədəf vəziyyət, əhatə kilidi, qəbul meyarları, dayanma sərhədləri |
+
+**Bütün modellərdə:** gizli düşüncə (chain-of-thought) tələb olunmur; hər promptda "Done when" uğur meyarı var; fakt tapşırıqlarında uydurmama qaydası; səhv tapma və müqayisədə yoxlanıla bilən cavab strukturu; API açarları və parollar avtomatik silinir.
 
 ## İki rejim
 

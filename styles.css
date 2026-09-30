@@ -52,6 +52,12 @@ body {
   padding: 6px 14px; cursor: pointer; font: 500 14px var(--sans); transition: background .15s, color .15s;
 }
 .seg-btn:hover { color: var(--text); }
+.seg-select {
+  width: auto; border: 0; background: transparent; color: var(--muted); border-radius: 99px;
+  padding: 6px 10px; font: 500 14px var(--sans); cursor: pointer; box-shadow: none;
+}
+.seg-select:focus { box-shadow: none; }
+.seg-select.active { background: var(--green-soft); color: var(--green); font-weight: 600; }
 .seg-btn.active { background: var(--green-soft); color: var(--green); font-weight: 600; }
 
 /* Hero */
@@ -166,6 +172,11 @@ h2 {
 .tab.active { background: var(--green); color: #fff; }
 .mode-help { text-align: center; margin-top: 12px; margin-bottom: 18px; font-size: 14px; color: var(--muted); }
 
+.notice {
+  margin: 0 auto 16px; padding: 10px 14px; border-radius: 10px; font-size: 13.5px;
+  background: #fff6e0; border: 1px solid #f0d58a; color: #6b5310;
+}
+.notice[hidden] { display: none; }
 .output-card {
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
   box-shadow: var(--shadow); padding: 16px;
